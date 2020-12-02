@@ -4,11 +4,11 @@
  * @Date: 2020-02-05 02:27:30
  */
 
-#include "gpm_slam/subscriber/cloud_subscriber.hpp"
+#include "subscriber/cloud_subscriber.hpp"
 
 
 
-namespace lidar_localization {
+namespace gpm_slam {
 CloudSubscriber::CloudSubscriber(ros::NodeHandle& nh, std::string topic_name, size_t buff_size)
     :nh_(nh) {
     subscriber_ = nh_.subscribe(topic_name, buff_size, &CloudSubscriber::msg_callback, this);

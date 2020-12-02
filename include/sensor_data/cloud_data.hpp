@@ -11,7 +11,7 @@
 namespace gpm_slam {
 class CloudData {
   public:
-    using POINT = pcl::PointXY;
+    using POINT = pcl::PointXYZ;
     using CLOUD = pcl::PointCloud<POINT>;
     using CLOUD_PTR = CLOUD::Ptr;
 

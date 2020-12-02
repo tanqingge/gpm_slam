@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(gpm_slam)
 
+SET(CMAKE_BUILD_TYPE "Release")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+set(CMAKE_CXX_STANDARD 14)
+add_compile_options(-std=c++14)
+add_definitions(-std=c++14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -36,6 +40,14 @@ find_package(catkin REQUIRED)
 ##   * add "message_generation" and every package in MSG_DEP_SET to
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
+  std_msgs
+  pcl_ros
+  geometry_msgs
+  tf
+  eigen_conversions
+  laser_geometry
+  sensor_msgs
 )
 ##   * add "message_runtime" and every package in MSG_DEP_SET to
 ##     catkin_package(CATKIN_DEPENDS ...)
@@ -100,6 +112,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+set(ALL_TARGET_LIBRARIES "")
+include(cmake/PCL.cmake)
+include(cmake/eigen.cmake)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gpm_slam
@@ -114,11 +129,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include ${catkin_INCLUDE_DIRS}
-# include
-# ${catkin_INCLUDE_DIRS}
+   include ${catkin_INCLUDE_DIRS}
 )
-
+include_directories( ${PROJECT_SOURCE_DIR}/include )
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/gpm_slam.cpp
@@ -198,50 +211,58 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
-add_library(cloud_datapp
-  include/sensor_data/cloud_data.hpp
-)
-add_dependencies(cloud_datapp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(cloud_datapp
-  ${catkin_LIBRARIES}
-)
+#add_library(cloud_datapp
+#  include/sensor_data/cloud_data.hpp
+#)
+#add_dependencies(cloud_datapp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(cloud_datapp
+#  ${catkin_LIBRARIES}
+#)
 
-add_library(tf_listenerpp
-  include/tf_listener/tf_listener.hpp
-)
-add_dependencies(tf_listenerpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(tf_listenerpp
-  ${catkin_LIBRARIES}
-)
+#add_library(tf_listenerpp
+#  include/tf_listener/tf_listener.hpp
+#)
+#add_dependencies(tf_listenerpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(tf_listenerpp
+#  ${catkin_LIBRARIES}
+#)
 
-add_library(cloud_subscriberpp
-  include/subscriber/cloud_subscriber.hpp
-)
-add_dependencies(cloud_subscriberpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(cloud_subscriberpp
-  ${catkin_LIBRARIES}
-)
+#add_library(cloud_subscriberpp
+#  include/subscriber/cloud_subscriber.hpp
+#)
+#add_dependencies(cloud_subscriberpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(cloud_subscriberpp
+#  ${catkin_LIBRARIES}
+#)
 
-add_library(line_datapp
-  include/sensor_data/line_data.hpp
-)
-add_dependencies(line_datapp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(line_datapp
-  ${catkin_LIBRARIES}
-)
+#add_library(line_datapp
+#  include/sensor_data/line_data.hpp
+#)
+#add_dependencies(line_datapp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(line_datapp
+#  ${catkin_LIBRARIES}
+#)
 
-add_library(cloud_publisherpp
-  include/publisher/cloud_publisher.hpp
-)
-add_dependencies(cloud_publisherpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(cloud_publisherpp
-  ${catkin_LIBRARIES}
-)
+#add_library(cloud_publisherpp
+#  include/publisher/cloud_publisher.hpp
+#)
+#add_dependencies(cloud_publisherpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(cloud_publisherpp
+#  ${catkin_LIBRARIES}
+#)
+
+
+file(GLOB_RECURSE ALL_SRCS "*.cpp")
+file(GLOB_RECURSE NODE_SRCS "src/*_node.cpp")
+list(REMOVE_ITEM ALL_SRCS ${NODE_SRCS})
 
 add_executable(test_frame_node
   src/test_frame_node.cpp
+  ${ALL_SRCS}
 )
-add_dependencies(test_frame_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(test_frame_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(test_frame_node
   ${catkin_LIBRARIES}
+  ${ALL_TARGET_LIBRARIES}
 )
+

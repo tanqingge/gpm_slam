@@ -10,7 +10,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include "gpm_slam/sensor_data/cloud_data.hpp"
+#include "sensor_data/cloud_data.hpp"
 
 namespace gpm_slam {
 class CloudPublisher {

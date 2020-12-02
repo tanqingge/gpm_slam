@@ -8,13 +8,16 @@
 #include <deque>
 
 #include <ros/ros.h>
-#include <laser_geometry.h>
+#include <laser_geometry/laser_geometry.h>
+
 #include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/LaserScan.h>
+
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include "gpm_slam/sensor_data/cloud_data.hpp"
+#include "sensor_data/cloud_data.hpp"
 
 namespace gpm_slam {
 class CloudSubscriber {
@@ -24,7 +27,7 @@ class CloudSubscriber {
     void ParseData(std::deque<CloudData>& deque_cloud_data);
 
   private:
-    void msg_callback(const sensor_msgs::Laserscan::ConstPtr& scan);
+    void msg_callback(const sensor_msgs::LaserScan::ConstPtr& scan);
 
   private:
     ros::NodeHandle nh_;

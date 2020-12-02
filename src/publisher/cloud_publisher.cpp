@@ -4,7 +4,7 @@
  * @Date: 2020-02-05 02:27:30
  */
 
-#include "gpm_slam/publisher/cloud_publisher.hpp"
+#include "publisher/cloud_publisher.hpp"
 
 namespace gpm_slam {
 CloudPublisher::CloudPublisher(ros::NodeHandle& nh,
