@@ -1,11 +1,9 @@
 /*
- * @Description: 通过ros发布点云
- * @Author: Ren Qian
- * @Date: 2020-02-05 02:27:30
- */
+publish laser cloud data
+*/
 
 #include "publisher/cloud_publisher.hpp"
-
+#include <pcl/filters/filter.h>
 namespace gpm_slam {
 CloudPublisher::CloudPublisher(ros::NodeHandle& nh,
                                std::string topic_name,
@@ -17,6 +15,8 @@ CloudPublisher::CloudPublisher(ros::NodeHandle& nh,
 
 void CloudPublisher::Publish(CloudData::CLOUD_PTR  cloud_ptr_input) {
     sensor_msgs::PointCloud2Ptr cloud_ptr_output(new sensor_msgs::PointCloud2());
+    std::vector<int> indicies;
+    pcl::removeNaNFromPointCloud(*cloud_ptr_input, *cloud_ptr_input, indicies);
     pcl::toROSMsg(*cloud_ptr_input, *cloud_ptr_output);
     cloud_ptr_output->header.stamp = ros::Time::now();
     cloud_ptr_output->header.frame_id = frame_id_;

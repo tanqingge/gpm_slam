@@ -1,8 +1,7 @@
-#ifndef GPM_SLAM_SENSOR_DATA_LINE_DATA_HPP_
-#define GPM_SLAM_SENSOR_DATA_LINE_DATA_HPP_
+#ifndef GPM_SLAM_SUBSCRIBER_LINE_SUBSCRIBER_HPP_
+#define GPM_SLAM_SUBSCRIBER_LINE_SUBSCRIBER_HPP_
 
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
+#include "sensor_data/line_data.hpp"
 
 namespace gpm_slam {
 class LineData {
