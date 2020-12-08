@@ -2,9 +2,11 @@
 #include <pcl/common/transforms.h>
 
 #include "subscriber/cloud_subscriber.hpp"
+#include "subscriber/line_subscriber.hpp"
 #include "tf_listener/tf_listener.hpp"
 #include "publisher/cloud_publisher.hpp"
 #include "publisher/odometry_publisher.hpp"
+#include "publisher/line_publisher.hpp"
 
 using namespace gpm_slam;
 
@@ -14,18 +16,21 @@ int main(int argc, char *argv[]) {
     ros::NodeHandle nh;
 
     std::shared_ptr<CloudSubscriber> cloud_sub_ptr = std::make_shared<CloudSubscriber>(nh, "scan", 100000);
-    /*std::shared_ptr<IMUSubscriber> imu_sub_ptr = std::make_shared<IMUSubscriber>(nh, "/kitti/oxts/imu", 1000000);
-    std::shared_ptr<GNSSSubscriber> gnss_sub_ptr = std::make_shared<GNSSSubscriber>(nh, "/kitti/oxts/gps/fix", 1000000);*/
+    std::shared_ptr<LineSubscriber> line_sub_ptr = std::make_shared<LineSubscriber>(nh, "current_scan", 1000000);
+    //std::shared_ptr<GNSSSubscriber> gnss_sub_ptr = std::make_shared<GNSSSubscriber>(nh, "/kitti/oxts/gps/fix", 1000000);*/
     std::shared_ptr<TFListener> tf_to_odom_ptr = std::make_shared<TFListener>(nh, "odom", "base_link");
 
     std::shared_ptr<CloudPublisher> cloud_pub_ptr = std::make_shared<CloudPublisher>(nh, "current_scan", 100, "map");
     std::shared_ptr<OdometryPublisher> odom_pub_ptr = std::make_shared<OdometryPublisher>(nh, "lidar_odom", "map", "lidar", 100);
+    std::shared_ptr<LinePublisher> line_pub_str=std::make_shared<LinePublisher>(nh,"line_scan",200,"map");
 
     std::deque<CloudData> cloud_data_buff;
+    std::deque<LineData> line_data_buff;
     /*std::deque<IMUData> imu_data_buff;
     std::deque<GNSSData> gnss_data_buff;*/
     Eigen::Matrix4f tf_to_odom = Eigen::Matrix4f::Identity();
     bool transform_received = false;
+    bool line_subscribe_received=false;
     //bool gnss_origin_position_inited = false;
 
     ros::Rate rate(100);
@@ -77,12 +82,23 @@ int main(int argc, char *argv[]) {
                     odometry_matrix.block<3,3>(0,0) = imu_data.GetOrientationMatrix();*/
                 
 
-                pcl::transformPointCloud(*cloud_data.cloud_ptr, *cloud_data.cloud_ptr, odometry_matrix);
+                    pcl::transformPointCloud(*cloud_data.cloud_ptr, *cloud_data.cloud_ptr, odometry_matrix);
 
                     cloud_pub_ptr->Publish(cloud_data.cloud_ptr);
                     odom_pub_ptr->Publish(odometry_matrix);
+                    line_sub_ptr->ParseData(line_data_buff);
+                    while (line_data_buff.size() > 0) 
+                    {
+                        LineData line_data = line_data_buff.front();
+                        line_data_buff.pop_front();
+                        line_pub_str->Publish(line_data);
+                    };
+            
+
                 
             }
+           
+            
         
 
         rate.sleep();

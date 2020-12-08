@@ -34,11 +34,11 @@ void OdometryPublisher::Publish(const Eigen::Matrix4f& transform_matrix) {
     odometry_.pose.pose.orientation.w = q.w();
 
     publisher_.publish(odometry_);
-    std::cout<<"A NEW START"<<std::endl;
+    /*std::cout<<"A NEW START"<<std::endl;
     std::cout<<"posx: "<<odometry_.pose.pose.position.x<<std::endl;
     std::cout<<"posy: "<<odometry_.pose.pose.position.y<<std::endl;
     std::cout<<"posz: "<<odometry_.pose.pose.position.z<<std::endl;
-    std::cout<<"ort: "<<odometry_.pose.pose.orientation.x<<" "<<odometry_.pose.pose.orientation.y<<" "<<odometry_.pose.pose.orientation.z<<" "<<odometry_.pose.pose.orientation.w<<std::endl;
+    std::cout<<"ort: "<<odometry_.pose.pose.orientation.x<<" "<<odometry_.pose.pose.orientation.y<<" "<<odometry_.pose.pose.orientation.z<<" "<<odometry_.pose.pose.orientation.w<<std::endl;*/
 
 }
 }
