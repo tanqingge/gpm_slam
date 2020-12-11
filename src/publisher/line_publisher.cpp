@@ -1,5 +1,5 @@
 #include "publisher/line_publisher.hpp"
-
+#include <time.h>
 namespace gpm_slam {
 
         LinePublisher::LinePublisher(ros::NodeHandle& nh,
@@ -10,7 +10,8 @@ namespace gpm_slam {
              publisher_=nh_.advertise<gpm_slam::Line_Segment>(topic_name,buff_size);
                    };
         void LinePublisher::Publish(LineData line_data){
-            
+            //clock_t startTime,endTime;
+            //startTime = clock();//计时开始
             new_line_msgs_.header.stamp = ros::Time::now();
             new_line_msgs_.header.seq = 1;
             new_line_msgs_.header.frame_id = frame_id_;
@@ -25,6 +26,8 @@ namespace gpm_slam {
                 new_line_msgs_.end[i].y=(*line_data.line_ptr)[i].end_point.y;
             }
             publisher_.publish(new_line_msgs_);
+            //endTime = clock();
+            //std::cout << "The run time of publish is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
         };
 
 }

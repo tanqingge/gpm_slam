@@ -4,6 +4,7 @@
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/conversions.h>
 #include <pcl_ros/transforms.h>
+#include <time.h>
 
 namespace gpm_slam{
     LineSubscriber::LineSubscriber(ros::NodeHandle& nh, std::string topic_name,size_t buff_size)
@@ -14,17 +15,22 @@ namespace gpm_slam{
     
     void LineSubscriber::ParseData(std::deque<LineData>& line_data_buff)
     {
+       // clock_t startTime,endTime;
+      //  startTime = clock();
         std::cout<<"new line_data size"<<new_line_data_.size()<<std::endl;
         if(new_line_data_.size()>0)
         {
             line_data_buff.insert(line_data_buff.end(),new_line_data_.begin(),new_line_data_.end());
             new_line_data_.clear();
         }
-
+        /*endTime = clock();//计时结束
+        std::cout << "The run time of parse data is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;*/
     };
 
     void LineSubscriber::NewLineDataInit()
     {
+        /*clock_t startTime,endTime;
+        startTime = clock();*/
         for(int i=0;i<MAXSEGMENTS;i++)
         {
             init_segs_[i].count_=0;
@@ -42,9 +48,13 @@ namespace gpm_slam{
             init_segs_[i].xMean_=0;
             init_segs_[i].yMean_=0;
         }
+        //endTime = clock();//计时结束
+        //std::cout << "The run time of init segment data is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
     };
     void LineSubscriber::FitLineWithPoint()
     {
+           //clock_t startTime,endTime;
+           //startTime = clock();
            int line_num_=0;
            int point_size=origincloud_for_line_ptr->points.size();
            static int count=0;
@@ -105,7 +115,9 @@ namespace gpm_slam{
                  }
             }
             count++;
-            if(count==500)
+            //endTime = clock();//计时结束
+            //std::cout << "The run time of Fitline is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+            if(count==50)
             {
                 std::ofstream outfile;
                 outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/lidat.txt", std::ios::out|std::ios::app);
@@ -118,6 +130,8 @@ namespace gpm_slam{
 
     void LineSubscriber::WhetherSegmentIsValid(LineData line_data_)
     {
+        //clock_t startTime,endTime;
+        //startTime = clock();
         
         LineData::LineSeg segs_temp_;
         static int num__=0;
@@ -152,7 +166,20 @@ namespace gpm_slam{
             }
 
         }
+        num__++;
+        if(num__==50)
+        {
+            std::ofstream outfile;
+            outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/line.txt", std::ios::out|std::ios::app);
+            for(int i=0;i<line_data_.line_ptr->size();i++){
+                outfile<<(*line_data_.line_ptr)[i].start_point.x<<" "<<(*line_data_.line_ptr)[i].start_point.y<<" "<<(*line_data_.line_ptr)[i].end_point.x<<" "<<(*line_data_.line_ptr)[i].end_point.y<<"\n";
+                }
+                outfile.close();
+            };
         std::cout<<"line number in a frame "<<line_data_.line_ptr->size()<<std::endl;
+        //endTime = clock();//计时结束
+        //std::cout << "The run time of WhetherValid is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+
         
     };
     void LineSubscriber::msg_callback(const sensor_msgs::PointCloud2::ConstPtr& cloud_msg_ptr)
@@ -164,8 +191,11 @@ namespace gpm_slam{
         NewLineDataInit();
         FitLineWithPoint();
         WhetherSegmentIsValid(line_data_);
+        clock_t startTime,endTime;
+        startTime = clock();
         new_line_data_.push_back(line_data_);
-
+        endTime = clock();//计时结束
+        std::cout << "The run time of Pushdata in new data is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
 
     };
     } 

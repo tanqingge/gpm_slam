@@ -11,11 +11,11 @@
 #include <cmath>
 
 //define parameter in temporary lines
-#define MAXSEGMENTS 200
-#define connect_th_ 0.1
-#define min_distance_ 0.1
-#define count_threhold_ 10
-#define length_limit_ 0
+#define MAXSEGMENTS 100
+#define connect_th_ 0.15
+#define min_distance_ 0.2
+#define count_threhold_ 8
+#define length_limit_ 0.3
 
 namespace gpm_slam {
 class LineSubscriber {

@@ -7,6 +7,8 @@
 #include "publisher/cloud_publisher.hpp"
 #include "publisher/odometry_publisher.hpp"
 #include "publisher/line_publisher.hpp"
+#include "publisher/lineonrviz_publisher.hpp"
+#include <time.h>
 
 using namespace gpm_slam;
 
@@ -23,6 +25,7 @@ int main(int argc, char *argv[]) {
     std::shared_ptr<CloudPublisher> cloud_pub_ptr = std::make_shared<CloudPublisher>(nh, "current_scan", 100, "map");
     std::shared_ptr<OdometryPublisher> odom_pub_ptr = std::make_shared<OdometryPublisher>(nh, "lidar_odom", "map", "lidar", 100);
     std::shared_ptr<LinePublisher> line_pub_str=std::make_shared<LinePublisher>(nh,"line_scan",200,"map");
+    std::shared_ptr<LineOnRvizPublisher> lineonviz_pub_ptr=std::make_shared<LineOnRvizPublisher>(nh,"line_segments",200,"map");
 
     std::deque<CloudData> cloud_data_buff;
     std::deque<LineData> line_data_buff;
@@ -37,7 +40,9 @@ int main(int argc, char *argv[]) {
     while (ros::ok()) 
     {
         ros::spinOnce();
-        
+        clock_t start,finish;
+        double totaltime;
+        start=clock();
         cloud_sub_ptr->ParseData(cloud_data_buff);
         tf_to_odom_ptr->LookupData(tf_to_odom);
         /*imu_sub_ptr->ParseData(imu_data_buff);
@@ -80,10 +85,9 @@ int main(int argc, char *argv[]) {
                     odometry_matrix(1,3) = gnss_data.local_N;
                     odometry_matrix(2,3) = gnss_data.local_U;
                     odometry_matrix.block<3,3>(0,0) = imu_data.GetOrientationMatrix();*/
-                
-
+                   
                     pcl::transformPointCloud(*cloud_data.cloud_ptr, *cloud_data.cloud_ptr, odometry_matrix);
-
+                    
                     cloud_pub_ptr->Publish(cloud_data.cloud_ptr);
                     odom_pub_ptr->Publish(odometry_matrix);
                     line_sub_ptr->ParseData(line_data_buff);
@@ -92,7 +96,11 @@ int main(int argc, char *argv[]) {
                         LineData line_data = line_data_buff.front();
                         line_data_buff.pop_front();
                         line_pub_str->Publish(line_data);
+                        lineonviz_pub_ptr->Publish(line_data,odometry_matrix);
                     };
+                    finish=clock();
+                    totaltime=(double)(finish-start)/CLOCKS_PER_SEC;
+                    std::cout<<"run time of transform"<<totaltime<<"s"<<std::endl;
             
 
                 
