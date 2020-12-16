@@ -25,14 +25,20 @@ namespace gpm_slam
         points.header.stamp = line_list.header.stamp = ros::Time::now();
         points.ns = line_list.ns = "gpm_slam";
         points.action = line_list.action = visualization_msgs::Marker::ADD;
-        points.pose.position.x = line_list.pose.position.x = odometry_matrix(0,3);
+        /*points.pose.position.x = line_list.pose.position.x = odometry_matrix(0,3);
         points.pose.position.y = line_list.pose.position.y = odometry_matrix(1,3);
         Eigen::Matrix3f Rotation_Matrix_=odometry_matrix.block<3,3>(0,0);
         Eigen::Quaternionf quaternion_(Rotation_Matrix_);
         points.pose.orientation.x = line_list.pose.orientation.x = quaternion_.x();
         points.pose.orientation.y = line_list.pose.orientation.y = quaternion_.y();
         points.pose.orientation.z = line_list.pose.orientation.z = quaternion_.z();
-        points.pose.orientation.w = line_list.pose.orientation.w = quaternion_.w();
+        points.pose.orientation.w = line_list.pose.orientation.w = quaternion_.w();*/
+        points.pose.position.x = line_list.pose.position.x = 0;
+        points.pose.position.y = line_list.pose.position.y = 0;
+        points.pose.orientation.x = line_list.pose.orientation.x = 0;
+        points.pose.orientation.y = line_list.pose.orientation.y = 0;
+        points.pose.orientation.z = line_list.pose.orientation.z = 0;
+        points.pose.orientation.w = line_list.pose.orientation.w = 1;
         
         points.id = 0;
         line_list.id = id_;
@@ -40,7 +46,7 @@ namespace gpm_slam
         points.type = visualization_msgs::Marker::POINTS;
         line_list.type = visualization_msgs::Marker::LINE_LIST;
         line_list.scale.x = 0.05;
-        line_list.color.r = 0;
+        line_list.color.r = 1.00;
         line_list.color.a = 1.0;
         for (int i=0;i<line_number;i++)
         {
@@ -50,8 +56,8 @@ namespace gpm_slam
         p1.z=0;*/
         line_startpoint<<(*line_data.line_ptr)[i].start_point.x,(*line_data.line_ptr)[i].start_point.y,0,1;
         line_endpoint<<(*line_data.line_ptr)[i].end_point.x,(*line_data.line_ptr)[i].end_point.y,0,1;
-        line_startpoint = odometry_matrix*line_startpoint;
-        line_endpoint = odometry_matrix*line_endpoint;
+        /*line_startpoint = odometry_matrix*line_startpoint;
+        line_endpoint = odometry_matrix*line_endpoint;*/
         p1.x=line_startpoint(0);
         p1.y=line_startpoint(1);
         p1.z=0;

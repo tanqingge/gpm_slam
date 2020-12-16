@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     ros::NodeHandle nh;
 
     std::shared_ptr<CloudSubscriber> cloud_sub_ptr = std::make_shared<CloudSubscriber>(nh, "scan", 100000);
-    std::shared_ptr<LineSubscriber> line_sub_ptr = std::make_shared<LineSubscriber>(nh, "current_scan", 1000000);
+    std::shared_ptr<LineSubscriber> line_sub_ptr = std::make_shared<LineSubscriber>(nh, "current_scan", 100);
     //std::shared_ptr<GNSSSubscriber> gnss_sub_ptr = std::make_shared<GNSSSubscriber>(nh, "/kitti/oxts/gps/fix", 1000000);*/
     std::shared_ptr<TFListener> tf_to_odom_ptr = std::make_shared<TFListener>(nh, "odom", "base_link");
 
@@ -35,7 +35,11 @@ int main(int argc, char *argv[]) {
     bool transform_received = false;
     bool line_subscribe_received=false;
     //bool gnss_origin_position_inited = false;
+    
 
+    //two flag for test
+    static int cnt_1=0;
+    static int cnt_2=0;
     ros::Rate rate(100);
     while (ros::ok()) 
     {
@@ -91,20 +95,31 @@ int main(int argc, char *argv[]) {
                     cloud_pub_ptr->Publish(cloud_data.cloud_ptr);
                     odom_pub_ptr->Publish(odometry_matrix);
                     line_sub_ptr->ParseData(line_data_buff);
-                    while (line_data_buff.size() > 0) 
-                    {
-                        LineData line_data = line_data_buff.front();
-                        line_data_buff.pop_front();
-                        line_pub_str->Publish(line_data);
-                        lineonviz_pub_ptr->Publish(line_data,odometry_matrix);
-                    };
                     finish=clock();
                     totaltime=(double)(finish-start)/CLOCKS_PER_SEC;
                     std::cout<<"run time of transform"<<totaltime<<"s"<<std::endl;
-            
-
+                    
+                    std::ofstream outfile_1;
+                    outfile_1.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/cloud_data_buff.txt", std::ios::out|std::ios::app);
+                    outfile_1<<"cloud count"<<cnt_1<<"\n";
+                    for(int i=0;i<(*cloud_data.cloud_ptr).size();i++)
+                    {
+                       
+                        outfile_1<<(*cloud_data.cloud_ptr).points[i].x<<" "<<(*cloud_data.cloud_ptr).points[i].y<<"\n";
+                    }
+                    outfile_1.close();
+                    cnt_1++;
                 
             }
+            while (line_data_buff.size() > 0) 
+            {
+                        LineData line_data = line_data_buff.front();
+                        line_data_buff.pop_front();
+                        line_pub_str->Publish(line_data);
+                        // the test in txt
+                        Eigen::Matrix4f odometry_matrix=tf_to_odom;
+                        lineonviz_pub_ptr->Publish(line_data,odometry_matrix);
+             };
            
             
         

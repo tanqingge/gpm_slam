@@ -117,7 +117,7 @@ namespace gpm_slam{
             count++;
             //endTime = clock();//计时结束
             //std::cout << "The run time of Fitline is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
-            if(count==50)
+            if(count==1500)
             {
                 std::ofstream outfile;
                 outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/lidat.txt", std::ios::out|std::ios::app);
@@ -167,7 +167,7 @@ namespace gpm_slam{
 
         }
         num__++;
-        if(num__==50)
+        if(num__==1500)
         {
             std::ofstream outfile;
             outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/line.txt", std::ios::out|std::ios::app);
@@ -188,6 +188,16 @@ namespace gpm_slam{
         std::cout<<"subscribe current_scan successfully"<<std::endl;
         line_data_.time=cloud_msg_ptr->header.stamp.toSec();
         pcl::fromROSMsg(*cloud_msg_ptr,*origincloud_for_line_ptr);
+        static int cnt_=0;
+        std::ofstream outfile_2;
+        outfile_2.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/line_data_buff.txt", std::ios::out|std::ios::app);
+        outfile_2<<"cloud count"<<cnt_<<"\n";
+        for(int i=0;i<origincloud_for_line_ptr->points.size();i++)
+        {
+            outfile_2<<origincloud_for_line_ptr->points[i].x<<" "<<origincloud_for_line_ptr->points[i].y<<"\n";
+        }
+        outfile_2.close();
+        cnt_++;
         NewLineDataInit();
         FitLineWithPoint();
         WhetherSegmentIsValid(line_data_);
