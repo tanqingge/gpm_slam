@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
                     totaltime=(double)(finish-start)/CLOCKS_PER_SEC;
                     std::cout<<"run time of transform"<<totaltime<<"s"<<std::endl;
                     
-                    std::ofstream outfile_1;
+                    /*std::ofstream outfile_1;
                     outfile_1.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/cloud_data_buff.txt", std::ios::out|std::ios::app);
                     outfile_1<<"cloud count"<<cnt_1<<"\n";
                     for(int i=0;i<(*cloud_data.cloud_ptr).size();i++)
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
                         outfile_1<<(*cloud_data.cloud_ptr).points[i].x<<" "<<(*cloud_data.cloud_ptr).points[i].y<<"\n";
                     }
                     outfile_1.close();
-                    cnt_1++;
+                    cnt_1++;*/
                 
             }
             while (line_data_buff.size() > 0) 

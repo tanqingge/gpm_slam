@@ -269,3 +269,13 @@ target_link_libraries(test_frame_node
   ${ALL_TARGET_LIBRARIES}
 )
 
+
+
+add_executable(front_end_node
+  src/front_end_node.cpp
+)
+add_dependencies(front_end_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(front_end_node
+  ${catkin_LIBRARIES}
+  ${ALL_TARGET_LIBRARIES}
+)

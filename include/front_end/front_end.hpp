@@ -10,15 +10,17 @@
 #include <pcl/registration/ndt.h>
 
 #include "sensor_data/cloud_data.hpp"
+#include "sensor_data/line_data.hpp"
 
 namespace lidar_localization {
 class FrontEnd {
   public:
-    class Frame {
-      public:  
+    struct Frame { 
         Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-        CloudData cloud_data;
-    };//定义关键帧
+        GridMap grid_map;
+        LineData line_in_frame_;
+        
+    };//key frame
 
   public:
     FrontEnd();
@@ -35,10 +37,10 @@ class FrontEnd {
     void UpdateNewFrame(const Frame& new_key_frame);
 
   private:
-    pcl::VoxelGrid<CloudData::POINT> cloud_filter_;
+    /*pcl::VoxelGrid<CloudData::POINT> cloud_filter_;
     pcl::VoxelGrid<CloudData::POINT> local_map_filter_;
     pcl::VoxelGrid<CloudData::POINT> display_filter_;
-    pcl::NormalDistributionsTransform<CloudData::POINT, CloudData::POINT>::Ptr ndt_ptr_;//定义NDT匹配方法指针
+    pcl::NormalDistributionsTransform<CloudData::POINT, CloudData::POINT>::Ptr ndt_ptr_;//定义NDT匹配方法指针*/
 
     std::deque<Frame> local_map_frames_;
     std::deque<Frame> global_map_frames_;
@@ -52,6 +54,7 @@ class FrontEnd {
 
     Eigen::Matrix4f init_pose_ = Eigen::Matrix4f::Identity();
     Eigen::Matrix4f predict_pose_ = Eigen::Matrix4f::Identity();
+    Eigen::Matrix4f last_pose_=Eigen::Matrix4f::Identity();
 };
 }
 
