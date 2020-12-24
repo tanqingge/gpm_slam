@@ -35,6 +35,7 @@ class FrontEnd {
   
   private:
     void UpdateNewFrame(const Frame& new_key_frame);
+    void LineMerge();//合并直线，将新的直线加入line_ptr
 
   private:
     /*pcl::VoxelGrid<CloudData::POINT> cloud_filter_;
