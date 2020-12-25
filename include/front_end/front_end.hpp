@@ -32,6 +32,8 @@ class FrontEnd {
     bool GetNewLocalMap(CloudData::CLOUD_PTR& local_map_ptr);
     bool GetNewGlobalMap(CloudData::CLOUD_PTR& global_map_ptr);
     bool GetCurrentScan(CloudData::CLOUD_PTR& current_scan_ptr);
+
+    void SetlineinMap(LINE* line_ptr);
   
   private:
     void UpdateNewFrame(const Frame& new_key_frame);

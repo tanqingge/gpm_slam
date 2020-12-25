@@ -32,15 +32,10 @@ namespace gpm_slam
         {
             float dy=(*line_ptr[i]).end_point.y-(*line_ptr[i]).start_point.y);
             float dx=(*line_ptr[i]).end_point.x-(*line_ptr[i]).start_point.x);
-            if
-            if(abs((*line_ptr[i]).k_)<1)
-            {
-                if(k>0)
-            }
-            else
-            {
-
-            }
+            dy=abs(dy);
+            dx=abs(dx);
+            int xs,ys,xe,ye;
+            xs=
         }
     };
 
@@ -64,8 +59,5 @@ namespace gpm_slam
 
 
         Eigen::Vector2i GetGridId();
-        void SetlineinMap(LINE* line_ptr)
-        {
-            
-        };
+
 }
