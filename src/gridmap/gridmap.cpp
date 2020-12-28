@@ -9,7 +9,7 @@ namespace gpm_slam
         int size_x=map_width_/resolution_+1;
         int size_y=map_height_/resolution_+1;
         Map_bel_.resize(size_x,size_y);
-        Map_bel_::zero();
+        Map_bel_::ones();
         init_x_=size_x/2;
         init_y_=size_y/2;
     }
@@ -32,11 +32,56 @@ namespace gpm_slam
         {
             float dy=(*line_ptr[i]).end_point.y-(*line_ptr[i]).start_point.y);
             float dx=(*line_ptr[i]).end_point.x-(*line_ptr[i]).start_point.x);
-            dy=abs(dy);
-            dx=abs(dx);
-            int xs,ys,xe,ye;
-            xs=
-        }
+            dy=(int)std::abs(dy);
+            dx=(int)std::abs(dx);
+            int x1=std::round((*line_ptr[i]).start_point.x);
+            int x2=std::round((*line_ptr[i]).end_point.x);
+            int y1=std::round((*line_ptr[i]).start_point.y);
+            int y2=std::round((*line_ptr[i]).end_point.y);
+            int sign1 = x2-x1?1:-1;
+            int sign2 = y2-y1?1:-1;
+            //直线近似于垂直情况
+            if(x1==x2)
+            {
+                int y_min=y1>y2?y1:y2;
+                int y_max=y1>y2?y2:y1;
+                for(int i=y_min;i<y_max;i++)
+                setGridBel(x1,i,0);
+            }
+            //剩下的情况
+            bool interchange=false;//用来统计xy是否需要交换
+            if(dx<dy)
+            {
+                interchange=true;
+                std::swap(x1,y1);
+                std::swap(x2,y2);
+            }
+            //保证x的起始点永远小于终止点，是++
+            if(x1>x2){
+                std::swap(x1,x2);
+                std::swap(y1,y2);
+            }
+            int increase=y1<y2?1:-1;
+            int r1=2*dy;
+            int r2=r1-2*dx;
+            int p=r1 -dx;
+            interchange?setGridBel(y1,x1,0):setGridBel(x1,y1,0);
+            int x=x1,y=y1;
+            while(x<x2)
+            {
+                x++;
+                if(p>0)
+                {
+                    p+ =r2;
+                    y + =increase;
+                    interchange?setGridBel(y1,x1,0):setGridBel(x1,y1,0);
+                }
+                else
+                {
+                    p += r1;
+                    interchange?setGridBel(y1,x1,0):setGridBel(x1,y1,0);
+                }
+            }
     };
 
     void GridMap::MapInit(LINE* line_ptr)
@@ -58,6 +103,8 @@ namespace gpm_slam
     }
 
 
-        Eigen::Vector2i GetGridId();
+        Eigen::Vector2i GetGridId()
+        {
+        };
 
 }
