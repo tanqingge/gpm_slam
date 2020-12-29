@@ -11,6 +11,7 @@
 
 #include "sensor_data/cloud_data.hpp"
 #include "sensor_data/line_data.hpp"
+#include "gridmap/gridmap.hpp"
 
 namespace lidar_localization {
 class FrontEnd {

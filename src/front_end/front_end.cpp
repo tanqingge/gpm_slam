@@ -4,11 +4,12 @@
 
 namespace gpm_slam
 {
-    FrontEnd::FrontEnd()
+    FrontEnd::FrontEnd(const double& resolution,const int& map_width,const int& map_hight)
     {
         local_map_ptr_(new CloudData::CLOUD());
         global_map_ptr_(new CloudData::CLOUD());
         result_cloud_ptr_(new CloudData::CLOUD());
+        current_frame_.GridMap=GridMap(resolution, map_width, map_hight);
     }
 
     Eigen::Matrix4f FrontEnd::Update(const CloudData& cloud_data) 
@@ -123,6 +124,13 @@ namespace gpm_slam
         has_new_global_map_ = true;
     }
     }
+
+    bool FrontEnd::GetCurrentScan(LineData::LineData current_scan)
+    {
+        current_frame_.line_in_frame_=current_scan;       
+    }
+
+
 }
 
 

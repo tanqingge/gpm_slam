@@ -74,13 +74,13 @@ int int main(int argc, char *argv[])
                         if(!front_end_inited)
                         {
                             front_end_inited=true;
-                            front_end_ptr->setInitpose();
+                            front_end_ptr->setInitpose(now_pose);
                         }
                         front_end_ptr->setPredictPose(last_pose,now_pose);
+                        front_end_ptr->GetCurrentScan(linedata);
+                        Eigen::Matrix4f current_pose=front_end_ptr->Update();
 
-                        Eigen::Matrix4f current_pose=front_end_ptr->Update(cloud_data);
-
-                        front_end_ptr->GetCurrentScan(current_pose);
+                        
                         line_pub_str->Publish(current_scan_ptr);
                         odom_pub_ptr->Publish(current_pose);
                         if (run_time > 460.0 && !has_global_map_published) 

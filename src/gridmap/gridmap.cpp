@@ -57,7 +57,7 @@ namespace gpm_slam
                 std::swap(x2,y2);
             }
             //保证x的起始点永远小于终止点，是++
-            if(x1>x2){
+            if(x1>x2){ 
                 std::swap(x1,x2);
                 std::swap(y1,y2);
             }
@@ -65,7 +65,7 @@ namespace gpm_slam
             int r1=2*dy;
             int r2=r1-2*dx;
             int p=r1 -dx;
-            interchange?setGridBel(y1,x1,0):setGridBel(x1,y1,0);
+            interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
             int x=x1,y=y1;
             while(x<x2)
             {
@@ -74,12 +74,12 @@ namespace gpm_slam
                 {
                     p+ =r2;
                     y + =increase;
-                    interchange?setGridBel(y1,x1,0):setGridBel(x1,y1,0);
+                    interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
                 }
                 else
                 {
                     p += r1;
-                    interchange?setGridBel(y1,x1,0):setGridBel(x1,y1,0);
+                    interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
                 }
             }
     };
