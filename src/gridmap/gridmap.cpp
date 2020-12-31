@@ -34,10 +34,10 @@ namespace gpm_slam
             float dx=(*line_ptr[i]).end_point.x-(*line_ptr[i]).start_point.x);
             dy=(int)std::abs(dy);
             dx=(int)std::abs(dx);
-            int x1=std::round((*line_ptr[i]).start_point.x);
-            int x2=std::round((*line_ptr[i]).end_point.x);
-            int y1=std::round((*line_ptr[i]).start_point.y);
-            int y2=std::round((*line_ptr[i]).end_point.y);
+            int x1=std::round((*line_ptr[i]).start_point.x/resolution_);
+            int x2=std::round((*line_ptr[i]).end_point.x/resolution_);
+            int y1=std::round((*line_ptr[i]).start_point.y/resolution_);
+            int y2=std::round((*line_ptr[i]).end_point.y/resolution_);
             int sign1 = x2-x1?1:-1;
             int sign2 = y2-y1?1:-1;
             //直线近似于垂直情况
@@ -45,8 +45,12 @@ namespace gpm_slam
             {
                 int y_min=y1>y2?y1:y2;
                 int y_max=y1>y2?y2:y1;
-                for(int i=y_min;i<y_max;i++)
-                setGridBel(x1,i,0);
+                for(int i=(y_min+init_y_);i<(y_max+init_y_);i++)
+                {
+                    int j=x+init_x_;
+                    if(i>=0)&(j>=0)
+                        setGridBel(j,i,0);
+                }                
             }
             //剩下的情况
             bool interchange=false;//用来统计xy是否需要交换
@@ -67,6 +71,7 @@ namespace gpm_slam
             int p=r1 -dx;
             interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
             int x=x1,y=y1;
+            int x_,y_;
             while(x<x2)
             {
                 x++;
@@ -74,12 +79,12 @@ namespace gpm_slam
                 {
                     p+ =r2;
                     y + =increase;
-                    interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
+                    interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
                 }
                 else
                 {
                     p += r1;
-                    interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
+                    interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
                 }
             }
     };

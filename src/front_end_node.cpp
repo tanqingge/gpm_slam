@@ -24,7 +24,7 @@ int int main(int argc, char *argv[])
     std::shared_ptr<LinePublisher> line_pub_str=std::make_shared<LinePublisher>(nh,"line_scan",200,"map");
     std::shared_ptr<LineOnRvizPublisher> lineonviz_pub_ptr=std::make_shared<LineOnRvizPublisher>(nh,"line_segments",200,"map");
 
-    std::shared_ptr<FrontEnd> front_end_ptr =std::make_shared<FrontEnd>()
+    std::shared_ptr<FrontEnd> front_end_ptr =std::make_shared<FrontEnd>(0.1,10,10);
     std::deque<CloudData> cloud_data_buff;
     std::deque<LineData> line_data_buff;
 
@@ -77,7 +77,7 @@ int int main(int argc, char *argv[])
                             front_end_ptr->setInitpose(now_pose);
                         }
                         front_end_ptr->setPredictPose(last_pose,now_pose);
-                        front_end_ptr->GetCurrentScan(linedata);
+                        front_end_ptr->GetCurrentScan(line_data);
                         Eigen::Matrix4f current_pose=front_end_ptr->Update();
 
                         

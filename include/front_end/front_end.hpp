@@ -16,11 +16,18 @@
 namespace lidar_localization {
 class FrontEnd {
   public:
-    struct Frame { 
+    class Frame { 
+    public:
         Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
         GridMap grid_map;
         LineData line_in_frame_;
         
+    public:
+        Frame(const double& resolution,const int& map_width,const int& map_hight):
+        grid_map(resolution,map_width,map_hight)
+        {
+
+        }
     };//key frame
 
   public:
@@ -51,10 +58,10 @@ class FrontEnd {
 
     bool has_new_local_map_ = false;
     bool has_new_global_map_ = false;
-    CloudData::CLOUD_PTR local_map_ptr_;
-    CloudData::CLOUD_PTR global_map_ptr_;
-    CloudData::CLOUD_PTR result_cloud_ptr_;
+    /*CloudData::CLOUD_PTR local_map_ptr_;
+    CloudData::CLOUD_PTR global_map_ptr_;*/
     Frame current_frame_;
+    LineData line_in_now_;
 
     Eigen::Matrix4f init_pose_ = Eigen::Matrix4f::Identity();
     Eigen::Matrix4f predict_pose_ = Eigen::Matrix4f::Identity();
