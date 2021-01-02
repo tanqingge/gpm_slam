@@ -95,6 +95,13 @@ namespace gpm_slam
         BresenhaminMap(line_ptr);
         cv::eigen2cv(Map_bel_,Cv_Map_);
         cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,CV_DIST_MASK_PRECISE);
+        for(int i=0;i<size_x;i++)
+        {
+            for(int j=0;j<size_y;j++)
+            {
+                cv_processedMap.at<float>(i,j)=1-cv_processedMap.at<float>(i,j)/10;
+            }
+        }
         cv::cv2eigen(cv_processedMap,Map_bel_);
     }
     

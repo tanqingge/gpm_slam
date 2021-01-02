@@ -23,15 +23,20 @@ namespace gpm_slam
 
     // 不是第一帧，就正常匹配
     GridMap gridmap_temp=current_frame_.GridMap;
+    int r=gridmap_temp.Map_bel.rows();
+    int c=gridmap_temp.Map_bel.cols();
+    gridmap_temp.Map_bel::Zero();
     float x_min=-0.5+predict_pose_(0,5);
     float x_max=0.5+predict_pose_(0,5);
     float y_min=-0.5+predict_pose_(1,5);
     float y_max=0.5+predict_pose_(1,5);
     float x_last,y_last,theta_last;
-    float point=-99.0;
+    float last_score=0;
+    float now_score=0;
     Eigen::Maxrix4f guess_pose=Eigen::Maxrix4f::Identity();
     transform_pose=Eigen::Maxrix4f::Identity();
-    for(float theta_i=-pi/2;theta_i<pi/2;)
+    float theta_this_frame,x_this_frame,y_this_frame;
+    for(float theta_i=-pi/2;theta_i<pi/2;theta_i=theta_i+0.157)
     {
         for(float x=x_min;x<x_max;x=x+0.1)
         {
@@ -40,7 +45,7 @@ namespace gpm_slam
                 // 更新相邻两帧的相对运动
                 guess_pose.block<0,0>(3,3)=Eigen::toRotationMatrix(theta);
                 guess_pose.block<0,3>(3,1)<<x,y,0;
-                transform_pose=current_frame_.pose.inverse()*guess_pose;\
+                transform_pose=current_frame_.pose.inverse()*guess_pose;
                 LINE* temp_line_ptr;
                 LineSeg line_tmp;
                 for(int i=0;i<line_in_now_.line_ptr->size();i++)
@@ -54,7 +59,25 @@ namespace gpm_slam
                     temp_line_ptr->push(line_tmp);                   
                 }
                 gridmap_temp.Bresenham(temp_line_ptr);
-                
+                //caculate score
+                for(int i =0;i<r;i++)
+                {
+                    for(int j=0;j<c;j++)
+                    {
+                        if(gridmap_temp(i,j)!=0)
+                        {
+                            now_score + = current_frame_.GridMap.Map_bel(i,j);
+                        }
+                        
+                    }
+                }
+                if (now_score>last_score)
+                {
+                    theta_this_frame=theta_i;
+                    x_this_frame=x;
+                    y_this_frame=y;
+                }
+                last_score=now_score;
 
             }
         }
