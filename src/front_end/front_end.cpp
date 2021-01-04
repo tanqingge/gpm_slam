@@ -8,12 +8,12 @@ namespace gpm_slam
     :
     current_frame_(resolution, map_width, map_hight)
     {
-       
+       is_currentframe_new=0;
     }
 
     Eigen::Matrix4f FrontEnd::Update(const LineData line_in_now_,Frame last_key_frame_) 
     {
-        if (local_map_frames_.size() == 0) {
+        if (is_currentframe_new == 0) {
             current_frame_.pose = init_pose_;
             current_frame_.LineData=line_in_now_;
             current_frame_.grid_map.MapInit(line_in_now_.line_ptr);
@@ -86,9 +86,8 @@ namespace gpm_slam
    
 
     // 匹配之后根据距离判断是否需要生成新的关键帧，如果需要，则做相应更新
-    if (fabs(last_key_frame_pose(0,3) - current_frame_.pose(0,3)) + 
-        fabs(last_key_frame_pose(1,3) - current_frame_.pose(1,3)) +
-        fabs(last_key_frame_pose(2,3) - current_frame_.pose(2,3)) > 2.0) {
+    if (fabs(x_this_frame - current_frame_.pose(0,3)) + 
+        fabs(y_this_frame - current_frame_.pose(1,3))  > 2.0) {
         UpdateNewFrame(current_frame_);
         last_key_frame_pose = current_frame_.pose;
     }
@@ -123,19 +122,15 @@ namespace gpm_slam
 
     void FrontEnd::UpdateNewFrame(const Frame& new_key_frame)
     {
-        Frame key_frame = new_key_frame;
+        
         local_map_frames_.push_back(key_frame);
-        while (local_map_frames_.size() > 20) 
-        {
-            local_map_frames_.pop_front();
-        }
 
         has_new_local_map_ = true;
 
     // 更新ndt匹配的目标点云
-        if (local_map_frames_.size() < 10) 
+        if (local_map_frames_.size() ==0) 
         {
-            ndt_ptr_->setInputTarget(local_map_ptr_);
+            local_map_frames_.push_back(new_key_frame);
         } 
         else 
         {
@@ -147,7 +142,7 @@ namespace gpm_slam
 
     // 更新全局地图
         global_map_frames_.push_back(key_frame);
-        if (global_map_frames_.size() % 100 != 0) 
+        /*if (global_map_frames_.size() % 100 != 0) 
         {
             return;
         } 
@@ -162,7 +157,7 @@ namespace gpm_slam
                 *global_map_ptr_ += *transformed_cloud_ptr;
             }
             has_new_global_map_ = true;
-        }
+        }*/
     }
 
     bool FrontEnd::GetCurrentScan(LineData::LineData current_scan)

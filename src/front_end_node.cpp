@@ -11,7 +11,7 @@
 
 using namespace gpm_slam;
 
-int int main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "front_end_node");
     ros::NodeHandle nh_;

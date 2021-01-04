@@ -60,6 +60,7 @@ class FrontEnd {
     bool has_new_global_map_ = false;
     /*CloudData::CLOUD_PTR local_map_ptr_;
     CloudData::CLOUD_PTR global_map_ptr_;*/
+    int is_currentframe_new;
     Frame current_frame_;
     LineData line_in_now_;
 
