@@ -1,5 +1,5 @@
 #ifndef GPM_SLAM_GRIDMAP_GRIDMAP_HPP_
-#define GPM_SLAM_PUBLISHER_CLOUD_PUBLISHER_HPP_
+#define GPM_SLAM_GRIDMAP_GRIDMAP_HPP_
 
 #include <eigen3/Eigen/Core>
 #include <nav_msgs/OccupancyGrid.h>
@@ -11,7 +11,7 @@ namespace gpm_slam
     class GridMap
     {
     public:
-        GridMap(arguments);
+        GridMap(const double& resolution,const int& map_width,const int& map_hight);
         virtual ~GridMap();
 
     public:

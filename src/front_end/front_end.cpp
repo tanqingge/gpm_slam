@@ -13,11 +13,13 @@ namespace gpm_slam
 
     Eigen::Matrix4f FrontEnd::Update(const LineData line_in_now_,Frame last_key_frame_) 
     {
-        if (is_currentframe_new == 0) {
+        if ( is_currentframe_new == 0) {
             current_frame_.pose = init_pose_;
             current_frame_.LineData=line_in_now_;
             current_frame_.grid_map.MapInit(line_in_now_.line_ptr);
             UpdateNewFrame(current_frame_);
+
+            is_currentframe_new = 1;
             return current_frame_.pose;
         }
 
