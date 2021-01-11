@@ -116,6 +116,7 @@ generate_messages(DEPENDENCIES
 set(ALL_TARGET_LIBRARIES "")
 include(cmake/PCL.cmake)
 include(cmake/eigen.cmake)
+include(cmake/opencv.cmake)
 catkin_package(
   CATKIN_DEPENDS
   message_runtime

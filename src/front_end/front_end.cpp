@@ -11,12 +11,12 @@ namespace gpm_slam
        is_currentframe_new=0;
     }
 
-    Eigen::Matrix4f FrontEnd::Update(const LineData line_in_now_,Frame last_key_frame_) 
+    Eigen::Matrix4f FrontEnd::Update(const LineData line_in_now_) 
     {
         if ( is_currentframe_new == 0) {
-            current_frame_.pose = init_pose_;
+            /*current_frame_.pose = init_pose_;
             current_frame_.LineData=line_in_now_;
-            current_frame_.grid_map.MapInit(line_in_now_.line_ptr);
+            current_frame_.grid_map.MapInit(line_in_now_.line_ptr);*/
             UpdateNewFrame(current_frame_);
 
             is_currentframe_new = 1;
@@ -24,10 +24,10 @@ namespace gpm_slam
         }
 
     // 不是第一帧，就正常匹配
-    GridMap gridmap_temp=current_frame_.GridMap;
-    int r=gridmap_temp.Map_bel.rows();
-    int c=gridmap_temp.Map_bel.cols();
-    gridmap_temp.Map_bel::Zero();
+    GridMap gridmap_temp=current_frame_.grid_map;
+    int r=gridmap_temp.Map_bel_.rows();
+    int c=gridmap_temp.Map_bel_.cols();
+    gridmap_temp.Map_bel_=Eigen::MatrixXd::Constant(r,c,0);
     float x_min=-0.5+predict_pose_(0,5);
     float x_max=0.5+predict_pose_(0,5);
     float y_min=-0.5+predict_pose_(1,5);
@@ -35,40 +35,48 @@ namespace gpm_slam
     float x_last,y_last,theta_last;
     float last_score=0;
     float now_score=0;
-    Eigen::Maxrix4f guess_pose=Eigen::Maxrix4f::Identity();
-    transform_pose=Eigen::Maxrix4f::Identity();
+    Eigen::Matrix4f guess_pose=Eigen::Matrix4f::Identity();
+    Eigen::Matrix4f transform_pose=Eigen::Matrix4f::Identity();
     float theta_this_frame,x_this_frame,y_this_frame;
-    for(float theta_i=-pi/2;theta_i<pi/2;theta_i=theta_i+0.157)
+    for(float theta_i=-PI/2;theta_i<PI/2;theta_i=theta_i+0.157)
     {
         for(float x=x_min;x<x_max;x=x+0.1)
         {
             for(float y=y_min;y<y_max;y=y+0.1)
             {
                 // 更新相邻两帧的相对运动
-                guess_pose.block<0,0>(3,3)=Eigen::toRotationMatrix(theta);
-                guess_pose.block<0,3>(3,1)<<x,y,0;
+                Eigen::AngleAxisf t_V(theta_i, Eigen::Vector3f(0, 0, 1));
+                Eigen::Matrix3f t_R=t_V.matrix();
+                guess_pose.block<3,3>(0,0)=t_R;
+                guess_pose.block<3,1>(0,3)<<x,y,0;
                 transform_pose=current_frame_.pose.inverse()*guess_pose;
-                LINE* temp_line_ptr;
-                LineSeg line_tmp;
+                LineData::LINE* temp_line_ptr;
+                LineData::LineSeg line_tmp;
                 for(int i=0;i<line_in_now_.line_ptr->size();i++)
                 {
-                    Eigen::Vector4f start_p<<(*line_in_now_.line_ptr)[i].start_point.x,(*line_in_now_.line_ptr)[i].start_point.y,(*line_in_now_.line_ptr)[i].start_point.z,1;
-                    Eigen::Vector4f end_p<<(*line_in_now_.line_ptr)[i].end_point.x,(*line_in_now_.line_ptr)[i].end_point.y,(*line_in_now_.line_ptr)[i].end_point.z,1;
-                    start_p *=guess_pose;
-                    end_p *=guess_pose;
-                    line_tmp.start_point=start_p;
-                    line_tmp.end_point=end_p;
-                    temp_line_ptr->push(line_tmp);                   
+                    Eigen::Vector4f start_p;
+                    start_p<<(*line_in_now_.line_ptr)[i].start_point.x,(*line_in_now_.line_ptr)[i].start_point.y,(*line_in_now_.line_ptr)[i].start_point.z,1;
+                    Eigen::Vector4f end_p;
+                    end_p<<(*line_in_now_.line_ptr)[i].end_point.x,(*line_in_now_.line_ptr)[i].end_point.y,(*line_in_now_.line_ptr)[i].end_point.z,1;
+                    start_p = guess_pose*start_p;
+                    end_p = guess_pose * end_p;
+                    line_tmp.start_point.x=start_p(0);
+                    line_tmp.start_point.y=start_p(1);
+                    line_tmp.start_point.z=start_p(2);
+                    line_tmp.end_point.x=end_p(0);
+                    line_tmp.end_point.y=end_p(1);
+                    line_tmp.end_point.z=end_p(2);
+                    temp_line_ptr->push_back(line_tmp);                   
                 }
-                gridmap_temp.Bresenham(temp_line_ptr);
+                gridmap_temp.BresenhaminMap(temp_line_ptr);
                 //caculate score
                 for(int i =0;i<r;i++)
                 {
                     for(int j=0;j<c;j++)
                     {
-                        if(gridmap_temp(i,j)!=0)
+                        if(gridmap_temp.Map_bel_(i,j)!=0)
                         {
-                            now_score + = current_frame_.GridMap.Map_bel(i,j);
+                            now_score = now_score + current_frame_.grid_map.Map_bel_(i,j);
                         }
                         
                     }
@@ -84,20 +92,24 @@ namespace gpm_slam
             }
         }
     }
-    
+    Eigen::AngleAxisf t_final_V(theta_this_frame, Eigen::Vector3f(0, 0, 1));
+    Eigen::Matrix3f t_final_R=t_final_V.matrix();
+    last_pose_.block<3,3>(0,0)=t_final_R;
+    last_pose_.block<3,1>(0,3)<<x_this_frame,y_this_frame,0;
    
 
     // 匹配之后根据距离判断是否需要生成新的关键帧，如果需要，则做相应更新
     if (fabs(x_this_frame - current_frame_.pose(0,3)) + 
-        fabs(y_this_frame - current_frame_.pose(1,3))  > 2.0) {
+        fabs(y_this_frame - current_frame_.pose(1,3))  > 2.0) 
+    {
         UpdateNewFrame(current_frame_);
-        last_key_frame_pose = current_frame_.pose;
+        
     }
 
     return current_frame_.pose;
 }
 
-    void FrontEnd::SetInitPose(const Eigen::Matrix4f& init_pose)
+    bool FrontEnd::SetInitPose(const Eigen::Matrix4f& init_pose)
     {
         init_pose_ = init_pose;
         return true;
@@ -106,31 +118,43 @@ namespace gpm_slam
     void FrontEnd::SetPredictPose(const Eigen::Matrix4f& last_pose,const Eigen::Matrix4f& now_pose)
     {
         // the last_pose and now_pose are from tf raw data, carculate the trasition and add the change into the predict
-        Eigen::Vector3f T_last=last_pose.block<0,3>(3,1);
-        Eigen::Vector3f T_now=now_pose.block<0,3>(3,1);
-        Eigen::Matrix3f R_last=last_pose.block<0,0>(3,3);
-        Eigen::Matrix3f R_now=now_pose.block<0,0>(3,3);
+        Eigen::Vector3f T_last=last_pose.block<3,1>(0,3);
+        Eigen::Vector3f T_now=now_pose.block<3,1>(0,3);
+        Eigen::Matrix3f R_last=last_pose.block<3,3>(0,0);
+        Eigen::Matrix3f R_now=now_pose.block<3,3>(0,0);
         Eigen::Vector3f delta_t=T_now-T_last;
         Eigen::Matrix3f delta_r=R_last.inverse()*R_now;
 
         //the predict pose with csm algorithm
-        Eigen::Matrix3f predictlast_r=last_pose_.block<0,0>(3,3);
+        Eigen::Matrix3f predictlast_r=last_pose_.block<3,3>(0,0);
         Eigen::Matrix3f predict_r=delta_r*predictlast_r;
-        Eigen::Vector3f predictlast_t=last_pose_.block<0,3>(3,1);
+        Eigen::Vector3f predictlast_t=last_pose_.block<3,1>(0,3);
         Eigen::Vector3f predict_t=delta_t+predictlast_t;
-        predict_pose_.block<0,0>(3,3)=predict_r;
-        predict_pose_.block<0,3>(3,1)=predict_t;
+        predict_pose_.block<3,3>(0,0)=predict_r;
+        predict_pose_.block<3,1>(0,3)=predict_t;
     }
 
-    void FrontEnd::UpdateNewFrame(const Frame& new_key_frame)
+    void FrontEnd::UpdateNewFrame(Frame current_frame_)
     {
+        if(is_currentframe_new == 0)
+        {
+            current_frame_.pose = init_pose_;
+            current_frame_.line_in_frame_=line_in_now_;
+            current_frame_.grid_map.MapInit(line_in_now_.line_ptr);
+            local_map_frames_.push_back(current_frame_);
+        }
+        else
+        {
+            current_frame_.pose = last_pose_;
+            current_frame_.line_in_frame_=line_in_now_;
+            current_frame_.grid_map.MapInit(line_in_now_.line_ptr);
+            local_map_frames_.push_back(current_frame_);
+            local_map_frames_.pop_front();
         
-        local_map_frames_.push_back(key_frame);
-
-        has_new_local_map_ = true;
+        }
 
     // 更新ndt匹配的目标点云
-        if (local_map_frames_.size() ==0) 
+        /*if (local_map_frames_.size() ==0) 
         {
             local_map_frames_.push_back(new_key_frame);
         } 
@@ -140,10 +164,10 @@ namespace gpm_slam
             local_map_filter_.setInputCloud(local_map_ptr_);
             local_map_filter_.filter(*filtered_local_map_ptr);
             ndt_ptr_->setInputTarget(filtered_local_map_ptr);
-        }
+        }*/
 
     // 更新全局地图
-        global_map_frames_.push_back(key_frame);
+        global_map_frames_.push_back(current_frame_);
         /*if (global_map_frames_.size() % 100 != 0) 
         {
             return;
@@ -160,12 +184,17 @@ namespace gpm_slam
             }
             has_new_global_map_ = true;
         }*/
-    }
+    };
 
-    bool FrontEnd::GetCurrentScan(LineData::LineData current_scan)
+    void FrontEnd::GetCurrentScan(LineData current_scan)
     {
-        line_in_now_.LineData=current_scan;
-    }
+        line_in_now_=current_scan;
+    };
+
+    void FrontEnd::SetlineinMap(LineData::LINE* line_ptr)
+    {
+
+    };
 
 
 }

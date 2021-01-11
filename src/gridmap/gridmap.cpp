@@ -1,4 +1,5 @@
 #include "gridmap/gridmap.hpp"
+#include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 
 namespace gpm_slam
@@ -6,12 +7,12 @@ namespace gpm_slam
     GridMap::GridMap(const double& resolution,const int& map_width,const int& map_hight):
     resolution_(resolution),map_width_(map_width),map_height_(map_hight)
     {
-        int size_x=map_width_/resolution_+1;
-        int size_y=map_height_/resolution_+1;
-        Map_bel_.resize(size_x,size_y);
-        Map_bel_::ones();
-        init_x_=size_x/2;
-        init_y_=size_y/2;
+        size_x_=map_width_/resolution_+1;
+        size_y_=map_height_/resolution_+1;
+        Map_bel_.resize(size_x_,size_y_);
+        Map_bel_=Eigen::MatrixXd::Constant(size_x_,size_y_,1);
+        init_x_=size_x_/2;
+        init_y_=size_y_/2;
     }
 
     void GridMap::setGridBel(int idx,int idy, int val)
@@ -25,19 +26,19 @@ namespace gpm_slam
     };
 
     //用来记录包含的直线特征穿过了矩阵中的多少个元素，穿过的矩阵元素记为1，返回的int类型为矩阵中不为0的元素数量;   
-    int BresenhaminMap(LINE* line_ptr)
+    int GridMap::BresenhaminMap(LineData::LINE* line_ptr)
     {
         int line_number = line_ptr->size();
         for(int i=0; i<line_number;i++)
         {
-            float dy=(*line_ptr[i]).end_point.y-(*line_ptr[i]).start_point.y);
-            float dx=(*line_ptr[i]).end_point.x-(*line_ptr[i]).start_point.x);
+            float dy=(*line_ptr)[i].end_point.y-(*line_ptr)[i].start_point.y;
+            float dx=(*line_ptr)[i].end_point.x-(*line_ptr)[i].start_point.x;
             dy=(int)std::abs(dy);
             dx=(int)std::abs(dx);
-            int x1=std::round((*line_ptr[i]).start_point.x/resolution_);
-            int x2=std::round((*line_ptr[i]).end_point.x/resolution_);
-            int y1=std::round((*line_ptr[i]).start_point.y/resolution_);
-            int y2=std::round((*line_ptr[i]).end_point.y/resolution_);
+            int x1=std::round((*line_ptr)[i].start_point.x/resolution_);
+            int x2=std::round((*line_ptr)[i].end_point.x/resolution_);
+            int y1=std::round((*line_ptr)[i].start_point.y/resolution_);
+            int y2=std::round((*line_ptr)[i].end_point.y/resolution_);
             int sign1 = x2-x1?1:-1;
             int sign2 = y2-y1?1:-1;
             //直线近似于垂直情况
@@ -47,8 +48,8 @@ namespace gpm_slam
                 int y_max=y1>y2?y2:y1;
                 for(int i=(y_min+init_y_);i<(y_max+init_y_);i++)
                 {
-                    int j=x+init_x_;
-                    if(i>=0)&(j>=0)
+                    int j= x1 + init_x_;
+                    if((i>=0)&&(j>=0))
                         setGridBel(j,i,0);
                 }                
             }
@@ -77,8 +78,8 @@ namespace gpm_slam
                 x++;
                 if(p>0)
                 {
-                    p+ =r2;
-                    y + =increase;
+                    p = p + r2;
+                    y = y + increase;
                     interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
                 }
                 else
@@ -87,17 +88,18 @@ namespace gpm_slam
                     interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
                 }
             }
+        }
     };
 
-    void GridMap::MapInit(LINE* line_ptr)
+    void GridMap::MapInit(LineData::LINE* line_ptr)
     {
         cv::Mat Cv_Map_,cv_processedMap;
         BresenhaminMap(line_ptr);
         cv::eigen2cv(Map_bel_,Cv_Map_);
         cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,CV_DIST_MASK_PRECISE);
-        for(int i=0;i<size_x;i++)
+        for(int i=0;i<size_x_;i++)
         {
-            for(int j=0;j<size_y;j++)
+            for(int j=0;j<size_y_;j++)
             {
                 cv_processedMap.at<float>(i,j)=1-cv_processedMap.at<float>(i,j)/10;
             }
@@ -105,17 +107,21 @@ namespace gpm_slam
         cv::cv2eigen(cv_processedMap,Map_bel_);
     }
     
-    void GridMap::MapUpdate(LINE* line_ptr)
+    void GridMap::MapUpdate(LineData::LINE* line_ptr)
     {
         Eigen::MatrixXd Old_Map_;
-        Old_Map_.resize(size_x,size_y);
+        Old_Map_.resize(size_x_,size_y_);
         Old_Map_=Map_bel_;
         MapInit(line_ptr);
         Map_bel_=Map_bel_*0.5+Old_Map_*0.5;
     }
 
 
-        Eigen::Vector2i GetGridId()
+    Eigen::Vector2i GridMap::GetGridId()
+        {
+        };
+
+    void GridMap::SetlineinMap()
         {
         };
 

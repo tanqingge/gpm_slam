@@ -12,8 +12,11 @@
 #include "sensor_data/cloud_data.hpp"
 #include "sensor_data/line_data.hpp"
 #include "gridmap/gridmap.hpp"
+#include <math.h>
 
-namespace lidar_localization {
+#define PI acos(-1)
+
+namespace gpm_slam {
 class FrontEnd {
   public:
     class Frame { 
@@ -31,20 +34,20 @@ class FrontEnd {
     };//key frame
 
   public:
-    FrontEnd();
+    FrontEnd(const double& resolution,const int& map_width,const int& map_hight);
 
-    Eigen::Matrix4f Update(const CloudData& cloud_data);
+    Eigen::Matrix4f Update(const LineData line_in_now_);
     bool SetInitPose(const Eigen::Matrix4f& init_pose);
-    bool SetPredictPose(const Eigen::Matrix4f& predict_pose);
+    void SetPredictPose(const Eigen::Matrix4f& predict_pose,const Eigen::Matrix4f& now_pose);
 
-    bool GetNewLocalMap(CloudData::CLOUD_PTR& local_map_ptr);
-    bool GetNewGlobalMap(CloudData::CLOUD_PTR& global_map_ptr);
-    bool GetCurrentScan(CloudData::CLOUD_PTR& current_scan_ptr);
+    //bool GetNewLocalMap(CloudData::CLOUD_PTR& local_map_ptr);
+    //bool GetNewGlobalMap(CloudData::CLOUD_PTR& global_map_ptr);
+    void GetCurrentScan(LineData current_scan);
 
-    void SetlineinMap(LINE* line_ptr);
+    void SetlineinMap(LineData::LINE* line_ptr);
   
   private:
-    void UpdateNewFrame(const Frame& new_key_frame);
+    void UpdateNewFrame(Frame new_key_frame);
     void LineMerge();//合并直线，将新的直线加入line_ptr
 
   private:
