@@ -1,6 +1,11 @@
 #include "gridmap/gridmap.hpp"
-#include <opencv2/opencv.hpp>
+#include <Eigen/Core>
+#include <Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 
 namespace gpm_slam
 {
@@ -96,7 +101,12 @@ namespace gpm_slam
         cv::Mat Cv_Map_,cv_processedMap;
         BresenhaminMap(line_ptr);
         cv::eigen2cv(Map_bel_,Cv_Map_);
+        std::cout<<"eigen trans to Mat success"<<std::endl;
+        
+        Cv_Map_.convertTo(Cv_Map_,CV_8UC1);
+        std::cout<<"the type of Cv_Map_ is "<< Cv_Map_.type()<<std::endl; 
         cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,CV_DIST_MASK_PRECISE);
+        //cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,3);
         for(int i=0;i<size_x_;i++)
         {
             for(int j=0;j<size_y_;j++)
@@ -104,7 +114,10 @@ namespace gpm_slam
                 cv_processedMap.at<float>(i,j)=1-cv_processedMap.at<float>(i,j)/10;
             }
         }
+
+        std::cout<<"the type of Cv_processedMap is "<< cv_processedMap.type()<<std::endl; 
         cv::cv2eigen(cv_processedMap,Map_bel_);
+
     }
     
     void GridMap::MapUpdate(LineData::LINE* line_ptr)
