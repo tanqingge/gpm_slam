@@ -45,6 +45,8 @@ class FrontEnd {
     void GetCurrentScan(LineData current_scan);
 
     void SetlineinMap(LineData::LINE* line_ptr);
+
+    void PublishPredictpose();
   
   private:
     void UpdateNewFrame(Frame new_key_frame);

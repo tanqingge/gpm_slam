@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
                 now_pose=tf_to_odom;
             }
         }
-        else
-        {
+        //else
+        //{
             while (cloud_data_buff.size() > 0) 
             {
                 CloudData cloud_data = cloud_data_buff.front();
@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
                 Eigen::Matrix4f odometry_matrix =tf_to_odom;
                 pcl::transformPointCloud(*cloud_data.cloud_ptr, *cloud_data.cloud_ptr, odometry_matrix);
                 cloud_pub_ptr->Publish(cloud_data.cloud_ptr);
+                std::cout<<"hello world"<<std::endl;
                 line_sub_ptr->ParseData(line_data_buff);
                 while(line_data_buff.size()>0)
                 {
@@ -82,8 +83,10 @@ int main(int argc, char *argv[])
                             front_end_ptr->SetInitPose(now_pose);
                         }
                         front_end_ptr->SetPredictPose(last_pose,now_pose);
+                        front_end_ptr->PublishPredictpose();
                         front_end_ptr->GetCurrentScan(line_data);
                         Eigen::Matrix4f current_pose=front_end_ptr->Update(line_data);
+                        std::cout<<"current_pose\n"<<current_pose<<std::endl;
                         //line_pub_str->Publish(current_scan_ptr);
                         odom_pub_ptr->Publish(current_pose);
                         /*if (run_time > 460.0 && !has_global_map_published) 
@@ -100,7 +103,7 @@ int main(int argc, char *argv[])
 
 
 
-            }
+            //}
                 
             
         }

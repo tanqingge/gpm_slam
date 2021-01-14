@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
                     
                     cloud_pub_ptr->Publish(cloud_data.cloud_ptr);
                     odom_pub_ptr->Publish(odometry_matrix);
+                    std::cout<<"hello world"<<std::endl;
                     line_sub_ptr->ParseData(line_data_buff);
                     finish=clock();
                     totaltime=(double)(finish-start)/CLOCKS_PER_SEC;

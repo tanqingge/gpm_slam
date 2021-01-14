@@ -33,6 +33,7 @@ namespace gpm_slam
     //用来记录包含的直线特征穿过了矩阵中的多少个元素，穿过的矩阵元素记为1，返回的int类型为矩阵中不为0的元素数量;   
     int GridMap::BresenhaminMap(LineData::LINE* line_ptr)
     {
+        int pnt_cnt=0;
         int line_number = line_ptr->size();
         for(int i=0; i<line_number;i++)
         {
@@ -56,6 +57,7 @@ namespace gpm_slam
                     int j= x1 + init_x_;
                     if((i>=0)&&(j>=0))
                         setGridBel(j,i,0);
+                    pnt_cnt++;
                 }                
             }
             //剩下的情况
@@ -86,14 +88,17 @@ namespace gpm_slam
                     p = p + r2;
                     y = y + increase;
                     interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
+                    pnt_cnt++;
                 }
                 else
                 {
                     p += r1;
                     interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
+                    pnt_cnt++;
                 }
             }
         }
+        //std::cout<<"the number of count is "<<pnt_cnt<<std::endl;
     };
 
     void GridMap::MapInit(LineData::LINE* line_ptr)
@@ -106,6 +111,7 @@ namespace gpm_slam
         Cv_Map_.convertTo(Cv_Map_,CV_8UC1);
         std::cout<<"the type of Cv_Map_ is "<< Cv_Map_.type()<<std::endl; 
         cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,CV_DIST_MASK_PRECISE);
+       
         //cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,3);
         for(int i=0;i<size_x_;i++)
         {
@@ -114,7 +120,9 @@ namespace gpm_slam
                 cv_processedMap.at<float>(i,j)=1-cv_processedMap.at<float>(i,j)/10;
             }
         }
-
+        
+        cv::imshow("figure",cv_processedMap);
+        cv::waitKey(20);
         std::cout<<"the type of Cv_processedMap is "<< cv_processedMap.type()<<std::endl; 
         cv::cv2eigen(cv_processedMap,Map_bel_);
 

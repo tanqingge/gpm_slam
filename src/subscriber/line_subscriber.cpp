@@ -58,7 +58,7 @@ namespace gpm_slam{
            int line_num_=0;
            int point_size=origincloud_for_line_ptr->points.size();
            static int count=0;
-           std::cout<<"pints size"<<point_size<<std::endl;
+           std::cout<<"points size"<<point_size<<std::endl;
            for (int i=0;i<point_size;i++)
            {
                int seg_state_=0;
@@ -205,7 +205,7 @@ namespace gpm_slam{
         startTime = clock();
         new_line_data_.push_back(line_data_);
         endTime = clock();//计时结束
-        std::cout << "The run time of Pushdata in new data is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+        //std::cout << "The run time of Pushdata in new data is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
 
     };
     } 
