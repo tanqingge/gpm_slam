@@ -1,5 +1,6 @@
 #include "front_end/front_end.hpp"
-
+#include <iostream>
+#include <fstream>
 #include <cmath>
 
 namespace gpm_slam
@@ -29,13 +30,14 @@ namespace gpm_slam
     int r=gridmap_temp.Map_bel_.rows();
     int c=gridmap_temp.Map_bel_.cols();
     //std::cout<<"r= "<<r<<" c= "<<c<<std::endl;
-    gridmap_temp.Map_bel_=Eigen::MatrixXd::Constant(r,c,0);
+    gridmap_temp.Map_bel_=Eigen::MatrixXd::Constant(r,c,-1);
+    //std::cout<<"INIT GRIDMAPTEMP\n"<<gridmap_temp.Map_bel_<<std::endl;
     //std::cout<<"Map_bel init"<<std::endl;
     float x_min=-0.5+predict_pose_(0,3);
     float x_max=0.5+predict_pose_(0,3);
     float y_min=-0.5+predict_pose_(1,3);
     float y_max=0.5+predict_pose_(1,3);
-    //std::cout<<"x_min= "<<x_min<<"x_max= "<<x_max<<"y_min= "<<y_min<<"y_max= "<<y_max<<std::endl;
+    std::cout<<"x_min= "<<x_min<<"x_max= "<<x_max<<"y_min= "<<y_min<<"y_max= "<<y_max<<std::endl;
     float x_last,y_last,theta_last;
     //std::cout<<"start set score"<<std::endl;
     float last_score=0;
@@ -44,14 +46,31 @@ namespace gpm_slam
     Eigen::Matrix4f transform_pose=Eigen::Matrix4f::Identity();
     float theta_this_frame,x_this_frame,y_this_frame;
     //std::cout<<"start csm "<<std::endl;
+    //将每个可能位姿的点数和打分计入txt
+        std::ofstream outfile;
+        std::cout<<"let score record!\n";
+        outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/score.txt",std::ios::out|std::ios::app);
+        if(!outfile.is_open())
+        {
+            std::cout << "can not open file ";
+		    exit(EXIT_FAILURE);
+        }
+        static int round=0;
+        outfile<<"round: "<<round<<'\n';      
+        
     for(float theta_i=-PI/2;theta_i<PI/2;theta_i=theta_i+0.157)
     {
         for(float x=x_min;x<x_max;x=x+0.1)
         {
             for(float y=y_min;y<y_max;y=y+0.1)
             {
+                std::cout<<"start now_score= "<<now_score<<std::endl;
                 // 更新相邻两帧的相对运动
                 //std::cout<<"theta_i= "<<theta_i<<"x= "<<x<<"y= "<<y<<std::endl;
+
+                //outfile<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<"\n";
+
+
                 Eigen::AngleAxisf t_V(theta_i, Eigen::Vector3f(0, 0, 1));
                 Eigen::Matrix3f t_R=t_V.matrix();
                 guess_pose.block<3,3>(0,0)=t_R;
@@ -89,10 +108,11 @@ namespace gpm_slam
                 {
                     for(int j=0;j<c;j++)
                     {
-                        if(gridmap_temp.Map_bel_(i,j)!=0)
+                        if(gridmap_temp.Map_bel_(i,j)==0)
                         {
                             now_score = now_score + current_frame_.grid_map.Map_bel_(i,j);
-                            //std::cout<<"score= "<<now_score<<std::endl;
+                            //std::cout<<"score now = "<<now_score<<std::endl;
+                            //outfile<<"i= "<<i<<"j= "<<j<<"score=: "<<now_score;
                         }
                         
                     }
@@ -103,17 +123,56 @@ namespace gpm_slam
                     x_this_frame=x;
                     y_this_frame=y;
                 }
+
+                if(x<0.0001&&x>-0.0001&&y<0.0001&&y>-0.0001&&theta_i>-0.001&&theta_i<0.001)
+                {
+                    for(int i =0;i<r;i++)
+                    {
+                        for(int j=0;j<c;j++)
+                        {
+                            outfile<<gridmap_temp.Map_bel_(i,j)<<' ';
+                        }
+                         outfile<<'\n';
+                    }
+                }
+                /*outfile<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<'\n';
+                outfile<<"final now_score= "<<now_score<<'\n';*/
+                /*std::cout<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<std::endl;
+                std::cout<<"final now_score= "<<now_score<<std::endl;*/
                 last_score=now_score;
                 now_score=0;
 
             }
         }
     }
+    outfile.close();
+    round++;
     std::cout<<"last_score=: "<<last_score<<std::endl;
     Eigen::AngleAxisf t_final_V(theta_this_frame, Eigen::Vector3f(0, 0, 1));
     Eigen::Matrix3f t_final_R=t_final_V.matrix();
     last_pose_.block<3,3>(0,0)=t_final_R;
     last_pose_.block<3,1>(0,3)<<x_this_frame,y_this_frame,0;
+    std::cout<<"last_pose:\n "<<last_pose_<<std::endl;
+    //如果在一个局部子地图中，则更新gridmap:
+    LineData::LINE * update_line_ptr=new(LineData::LINE);
+    LineData::LineSeg line_tmp;
+    for(int i=0;i<line_in_now_.line_ptr->size();i++)
+    {
+        Eigen::Vector4f start_p;
+        start_p<<(*line_in_now_.line_ptr)[i].start_point.x,(*line_in_now_.line_ptr)[i].start_point.y,(*line_in_now_.line_ptr)[i].start_point.z,1;
+        Eigen::Vector4f end_p;
+        end_p<<(*line_in_now_.line_ptr)[i].end_point.x,(*line_in_now_.line_ptr)[i].end_point.y,(*line_in_now_.line_ptr)[i].end_point.z,1;
+        start_p = last_pose_*start_p;
+        end_p = last_pose_ * end_p;
+        line_tmp.start_point.x=start_p(0);
+        line_tmp.start_point.y=start_p(1);
+        line_tmp.start_point.z=start_p(2);
+        line_tmp.end_point.x=end_p(0);
+        line_tmp.end_point.y=end_p(1);
+        line_tmp.end_point.z=end_p(2);
+        update_line_ptr->push_back(line_tmp); 
+    }
+    current_frame_.grid_map.MapUpdate(update_line_ptr);
     
    
 

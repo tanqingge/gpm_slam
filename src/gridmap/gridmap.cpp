@@ -5,6 +5,10 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <cmath>
 
 
 namespace gpm_slam
@@ -45,8 +49,8 @@ namespace gpm_slam
             int x2=std::round((*line_ptr)[i].end_point.x/resolution_);
             int y1=std::round((*line_ptr)[i].start_point.y/resolution_);
             int y2=std::round((*line_ptr)[i].end_point.y/resolution_);
-            int sign1 = x2-x1?1:-1;
-            int sign2 = y2-y1?1:-1;
+            /*int sign1 = x2-x1?1:-1;
+            int sign2 = y2-y1?1:-1;*/
             //直线近似于垂直情况
             if(x1==x2)
             {
@@ -61,6 +65,7 @@ namespace gpm_slam
                 }                
             }
             //剩下的情况
+            else{
             bool interchange=false;//用来统计xy是否需要交换
             if(dx<dy)
             {
@@ -97,12 +102,15 @@ namespace gpm_slam
                     pnt_cnt++;
                 }
             }
+            }
         }
-        //std::cout<<"the number of count is "<<pnt_cnt<<std::endl;
+        std::cout<<"the number of count is "<<pnt_cnt<<std::endl;
     };
 
     void GridMap::MapInit(LineData::LINE* line_ptr)
     {
+        //计数器:
+        static int matrix_id=0;
         cv::Mat Cv_Map_,cv_processedMap;
         BresenhaminMap(line_ptr);
         cv::eigen2cv(Map_bel_,Cv_Map_);
@@ -111,21 +119,44 @@ namespace gpm_slam
         Cv_Map_.convertTo(Cv_Map_,CV_8UC1);
         std::cout<<"the type of Cv_Map_ is "<< Cv_Map_.type()<<std::endl; 
         cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,CV_DIST_MASK_PRECISE);
-       
+        /*cv::imshow("figure",cv_processedMap);
+        cv::waitKey(20);
+        std::cout<<"the type of Cv_processedMap is "<< cv_processedMap.type()<<std::endl;*/
         //cv::distanceTransform(Cv_Map_,cv_processedMap,CV_DIST_L2,3);
         for(int i=0;i<size_x_;i++)
         {
             for(int j=0;j<size_y_;j++)
             {
-                cv_processedMap.at<float>(i,j)=1-cv_processedMap.at<float>(i,j)/10;
+                //cv_processedMap.at<float>(i,j)=1-cv_processedMap.at<float>(i,j)/10;
+                cv_processedMap.at<float>(i,j)=std::exp(-cv_processedMap.at<float>(i,j));
+                cv_processedMap.at<float>(i,j)=100*cv_processedMap.at<float>(i,j);
             }
         }
         
+        //判断matrix生成是否正确:
         cv::imshow("figure",cv_processedMap);
         cv::waitKey(20);
-        std::cout<<"the type of Cv_processedMap is "<< cv_processedMap.type()<<std::endl; 
+        std::cout<<"the type of Cv_processedMap is "<< cv_processedMap.type()<<std::endl;
         cv::cv2eigen(cv_processedMap,Map_bel_);
-
+        std::ofstream outfile;
+        std::cout<<"let record!\n";
+        outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/matrix.txt",std::ios::out|std::ios::app);
+        if(!outfile.is_open())
+        {
+            std::cout << "can not open file ";
+		    exit(EXIT_FAILURE);
+        }
+        outfile<<'The matrix id is'<<matrix_id<<'\n';
+        for(int i=0;i<size_x_;i++)
+        {
+            for(int j=0;j<size_y_;j++)
+            {
+               outfile<<Map_bel_(i,j)<<' ';
+            }
+            outfile<<'\n';
+        }
+        matrix_id++;
+        outfile.close();
     }
     
     void GridMap::MapUpdate(LineData::LINE* line_ptr)
