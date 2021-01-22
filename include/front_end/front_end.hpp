@@ -49,7 +49,7 @@ class FrontEnd {
     void PublishPredictpose();
   
   private:
-    void UpdateNewFrame(Frame new_key_frame);
+    void UpdateNewFrame(Frame& new_key_frame);
     void LineMerge();//合并直线，将新的直线加入line_ptr
 
   private:

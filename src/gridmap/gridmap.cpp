@@ -22,6 +22,9 @@ namespace gpm_slam
         Map_bel_=Eigen::MatrixXd::Constant(size_x_,size_y_,1);
         init_x_=size_x_/2;
         init_y_=size_y_/2;
+        std::cout<<"resolution is "<<resolution_<<std::endl;
+        std::cout<<"size_x is "<<size_x_<<" size_y is "<<size_y_<<std::endl;
+        std::cout<<"init_x is "<<init_x_<<" init_y is "<<init_y_<<std::endl;
     }
 
     void GridMap::setGridBel(int idx,int idy, int val)
@@ -60,7 +63,8 @@ namespace gpm_slam
                 {
                     int j= x1 + init_x_;
                     if((i>=0)&&(j>=0))
-                        setGridBel(j,i,0);
+                        //setGridBel(j,i,0);
+                        setGridBel(i,j,0);
                     pnt_cnt++;
                 }                
             }
@@ -82,7 +86,8 @@ namespace gpm_slam
             int r1=2*dy;
             int r2=r1-2*dx;
             int p=r1 -dx;
-            interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
+            //interchange?setGridBel(y1+init_x_,x1+init_y_,0):setGridBel(x1+init_x_,y1+init_y_,0);
+            interchange?setGridBel(x1+init_y_,y1+init_x_,0):setGridBel(y1+init_y_,x1+init_x_,0);
             int x=x1,y=y1;
             int x_,y_;
             while(x<x2)
@@ -92,13 +97,15 @@ namespace gpm_slam
                 {
                     p = p + r2;
                     y = y + increase;
-                    interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
+                    //interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
+                    interchange?setGridBel(x+init_y_,y+init_x_,0):setGridBel(y+init_y_,x+init_x_,0);
                     pnt_cnt++;
                 }
                 else
                 {
                     p += r1;
-                    interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
+                    //interchange?setGridBel(y+init_x_,x+init_y_,0):setGridBel(x+init_x_,y+init_y_,0);
+                    interchange?setGridBel(x+init_y_,y+init_x_,0):setGridBel(y+init_y_,x+init_x_,0);
                     pnt_cnt++;
                 }
             }
@@ -134,13 +141,13 @@ namespace gpm_slam
         }
         
         //判断matrix生成是否正确:
-        cv::imshow("figure",cv_processedMap);
-        cv::waitKey(20);
-        std::cout<<"the type of Cv_processedMap is "<< cv_processedMap.type()<<std::endl;
+        /*cv::imshow("figure",cv_processedMap);
+        cv::waitKey(10000);
+        std::cout<<"the type of Cv_processedMap is "<< cv_processedMap.type()<<std::endl;*/
         cv::cv2eigen(cv_processedMap,Map_bel_);
-        std::ofstream outfile;
+        //std::ofstream outfile;
         std::cout<<"let record!\n";
-        outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/matrix.txt",std::ios::out|std::ios::app);
+        /*outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/matrix.txt",std::ios::out|std::ios::app);
         if(!outfile.is_open())
         {
             std::cout << "can not open file ";
@@ -154,9 +161,9 @@ namespace gpm_slam
                outfile<<Map_bel_(i,j)<<' ';
             }
             outfile<<'\n';
-        }
+        }*/
         matrix_id++;
-        outfile.close();
+        //outfile.close();
     }
     
     void GridMap::MapUpdate(LineData::LINE* line_ptr)

@@ -2,6 +2,10 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 namespace gpm_slam
 {
@@ -26,11 +30,23 @@ namespace gpm_slam
         }
 
     // 不是第一帧，就正常匹配
-    GridMap gridmap_temp=current_frame_.grid_map;
+    double resolution_temp=current_frame_.grid_map.resolution_;
+    int map_width_temp=current_frame_.grid_map.map_width_;
+    int map_hight_temp=current_frame_.grid_map.map_height_;
+    GridMap gridmap_temp(resolution_temp,map_width_temp,map_hight_temp);
+    //gridmap_temp=current_frame_.grid_map;
     int r=gridmap_temp.Map_bel_.rows();
     int c=gridmap_temp.Map_bel_.cols();
+
+
     //std::cout<<"r= "<<r<<" c= "<<c<<std::endl;
-    gridmap_temp.Map_bel_=Eigen::MatrixXd::Constant(r,c,-1);
+    
+    /*cv::Mat Cv_Map_Origin;
+    cv::eigen2cv(gridmap_temp.Map_bel_,Cv_Map_Origin);
+    Cv_Map_Origin.convertTo(Cv_Map_Origin,CV_8UC1);
+    cv::imshow("figure_Origin",Cv_Map_Origin);
+    cv::waitKey(10000);
+    gridmap_temp.Map_bel_=Eigen::MatrixXd::Constant(r,c,1);*/
     //std::cout<<"INIT GRIDMAPTEMP\n"<<gridmap_temp.Map_bel_<<std::endl;
     //std::cout<<"Map_bel init"<<std::endl;
     float x_min=-0.5+predict_pose_(0,3);
@@ -47,16 +63,16 @@ namespace gpm_slam
     float theta_this_frame,x_this_frame,y_this_frame;
     //std::cout<<"start csm "<<std::endl;
     //将每个可能位姿的点数和打分计入txt
-        std::ofstream outfile;
+        //std::ofstream outfile;
         std::cout<<"let score record!\n";
-        outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/score.txt",std::ios::out|std::ios::app);
+        /*outfile.open("/home/tanqingge/catkin_ws/src/gpm_slam/exp_data/score.txt",std::ios::out|std::ios::app);
         if(!outfile.is_open())
         {
             std::cout << "can not open file ";
 		    exit(EXIT_FAILURE);
-        }
+        }*/
         static int round=0;
-        outfile<<"round: "<<round<<'\n';      
+        //outfile<<"round: "<<round<<'\n';      
         
     for(float theta_i=-PI/2;theta_i<PI/2;theta_i=theta_i+0.157)
     {
@@ -64,7 +80,7 @@ namespace gpm_slam
         {
             for(float y=y_min;y<y_max;y=y+0.1)
             {
-                std::cout<<"start now_score= "<<now_score<<std::endl;
+                //std::cout<<"start now_score= "<<now_score<<std::endl;
                 // 更新相邻两帧的相对运动
                 //std::cout<<"theta_i= "<<theta_i<<"x= "<<x<<"y= "<<y<<std::endl;
 
@@ -122,30 +138,28 @@ namespace gpm_slam
                     theta_this_frame=theta_i;
                     x_this_frame=x;
                     y_this_frame=y;
+                    last_score=now_score;
                 }
 
-                if(x<0.0001&&x>-0.0001&&y<0.0001&&y>-0.0001&&theta_i>-0.001&&theta_i<0.001)
-                {
-                    for(int i =0;i<r;i++)
-                    {
-                        for(int j=0;j<c;j++)
-                        {
-                            outfile<<gridmap_temp.Map_bel_(i,j)<<' ';
-                        }
-                         outfile<<'\n';
-                    }
-                }
+                //if(x<0.0001&&x>-0.0001&&y<0.0001&&y>-0.0001&&theta_i>-0.001&&theta_i<0.001)
+                //{
+                    cv::Mat Cv_Map_;
+                    cv::eigen2cv(gridmap_temp.Map_bel_,Cv_Map_);
+                    Cv_Map_.convertTo(Cv_Map_,CV_8UC1);
+                    Cv_Map_ = 100 * Cv_Map_;
+                    cv::imshow("figure_000",Cv_Map_);
+                    cv::waitKey(10);
+                //}
                 /*outfile<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<'\n';
                 outfile<<"final now_score= "<<now_score<<'\n';*/
-                /*std::cout<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<std::endl;
-                std::cout<<"final now_score= "<<now_score<<std::endl;*/
-                last_score=now_score;
+                std::cout<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<std::endl;
+                std::cout<<"final now_score= "<<now_score<<std::endl;
+                
                 now_score=0;
-
+                gridmap_temp.Map_bel_=Eigen::MatrixXd::Constant(r,c,1);
             }
         }
     }
-    outfile.close();
     round++;
     std::cout<<"last_score=: "<<last_score<<std::endl;
     Eigen::AngleAxisf t_final_V(theta_this_frame, Eigen::Vector3f(0, 0, 1));
@@ -212,7 +226,7 @@ namespace gpm_slam
         predict_pose_.block<3,1>(0,3)=predict_t;
     }
 
-    void FrontEnd::UpdateNewFrame(Frame current_frame_)
+    void FrontEnd::UpdateNewFrame(Frame& current_frame_)
     {
         if(is_currentframe_new == 0)
         {
@@ -220,6 +234,12 @@ namespace gpm_slam
             current_frame_.line_in_frame_=line_in_now_;
             current_frame_.grid_map.MapInit(line_in_now_.line_ptr);
             local_map_frames_.push_back(current_frame_);
+
+            cv::Mat Cv_Map_CurrentFrame;
+            cv::eigen2cv(current_frame_.grid_map.Map_bel_,Cv_Map_CurrentFrame);
+            Cv_Map_CurrentFrame.convertTo(Cv_Map_CurrentFrame,CV_8UC1);
+            cv::imshow("figure_Origin",Cv_Map_CurrentFrame);
+            cv::waitKey(1000);
         }
         else
         {
