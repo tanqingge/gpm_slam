@@ -94,8 +94,8 @@ namespace gpm_slam
                 transform_pose=current_frame_.pose.inverse()*guess_pose;
                 LineData::LINE* temp_line_ptr=new (LineData::LINE);
                 LineData::LineSeg line_tmp;
-                /*std::cout<<"guess pose=:\n "<<guess_pose<<std::endl;
-                std::cout<<"line number is"<<line_in_now_.line_ptr->size()<<std::endl;*/
+                //std::cout<<"guess pose=:\n "<<guess_pose<<std::endl;
+                //std::cout<<"line number is"<<line_in_now_.line_ptr->size()<<std::endl;*/
                 for(int i=0;i<line_in_now_.line_ptr->size();i++)
                 {
                     Eigen::Vector4f start_p;
@@ -143,17 +143,17 @@ namespace gpm_slam
 
                 //if(x<0.0001&&x>-0.0001&&y<0.0001&&y>-0.0001&&theta_i>-0.001&&theta_i<0.001)
                 //{
-                    cv::Mat Cv_Map_;
+                    /*cv::Mat Cv_Map_;
                     cv::eigen2cv(gridmap_temp.Map_bel_,Cv_Map_);
                     Cv_Map_.convertTo(Cv_Map_,CV_8UC1);
                     Cv_Map_ = 100 * Cv_Map_;
                     cv::imshow("figure_000",Cv_Map_);
-                    cv::waitKey(10);
+                    cv::waitKey(10);*/
                 //}
                 /*outfile<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<'\n';
                 outfile<<"final now_score= "<<now_score<<'\n';*/
-                std::cout<<"x: "<<x<<"y: "<<y<<" theta: "<<theta_i<<std::endl;
-                std::cout<<"final now_score= "<<now_score<<std::endl;
+                /*std::cout<<"x: "<<x_this_frame<<"y: "<<y_this_frame<<" theta: "<<theta_this_frame<<std::endl;
+                std::cout<<"final now_score= "<<now_score<<std::endl;*/
                 
                 now_score=0;
                 gridmap_temp.Map_bel_=Eigen::MatrixXd::Constant(r,c,1);
@@ -162,6 +162,7 @@ namespace gpm_slam
     }
     round++;
     std::cout<<"last_score=: "<<last_score<<std::endl;
+    std::cout<<"final pose is "<< "x: "<<x_this_frame<<"y: "<<y_this_frame<<" theta: "<<theta_this_frame<<std::endl;
     Eigen::AngleAxisf t_final_V(theta_this_frame, Eigen::Vector3f(0, 0, 1));
     Eigen::Matrix3f t_final_R=t_final_V.matrix();
     last_pose_.block<3,3>(0,0)=t_final_R;

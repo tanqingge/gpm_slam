@@ -29,7 +29,11 @@ namespace gpm_slam
 
     void GridMap::setGridBel(int idx,int idy, int val)
     {
-        Map_bel_(idx,idy)=val;
+        if(idx>=0&&idx<size_x_&&idy>=0&&idy<size_y_)
+        {
+            Map_bel_(idx,idy)=val;
+        }
+        
     }
     int GridMap::getGridBel(int idx,int idy)
     {
@@ -172,7 +176,7 @@ namespace gpm_slam
         Old_Map_.resize(size_x_,size_y_);
         Old_Map_=Map_bel_;
         MapInit(line_ptr);
-        Map_bel_=Map_bel_*0.5+Old_Map_*0.5;
+        Map_bel_=Map_bel_*0.2+Old_Map_*0.8;
     }
 
 
